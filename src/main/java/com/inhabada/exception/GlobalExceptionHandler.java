@@ -1,13 +1,16 @@
 package com.inhabada.exception;
 
 import com.inhabada.dto.ErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -105,10 +108,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<Void> handleHttpMediaTypeNotAcceptable(HttpMediaTypeNotAcceptableException ex) {
+        // JSON으로 직렬화할 수 없는 Accept (예: SSE의 text/event-stream) — 본문 없이 상태만 반환
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
+    }
+
     @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException ex) {
+    public ResponseEntity<?> handleUnauthorizedException(UnauthorizedException ex,
+                                                        HttpServletRequest request) {
+        // SSE(EventSource) 요청은 text/event-stream만 수락하므로 JSON 직렬화가 불가능하다.
+        // 이 경우 본문 없이 401만 반환해 HttpMediaTypeNotAcceptableException 2차 예외와 로그 도배를 막는다.
+        if (isEventStreamRequest(request)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         ErrorResponse response = new ErrorResponse("UNAUTHORIZED", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    private boolean isEventStreamRequest(HttpServletRequest request) {
+        String accept = request.getHeader("Accept");
+        return accept != null && accept.contains(MediaType.TEXT_EVENT_STREAM_VALUE);
     }
 
     @ExceptionHandler(ForbiddenException.class)

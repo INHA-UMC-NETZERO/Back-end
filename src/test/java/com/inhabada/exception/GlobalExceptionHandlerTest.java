@@ -1,6 +1,7 @@
 package com.inhabada.exception;
 
 import com.inhabada.dto.ErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
@@ -107,13 +108,27 @@ class GlobalExceptionHandlerTest {
     @Test
     void handleUnauthorizedException_returns401() {
         UnauthorizedException ex = new UnauthorizedException("로그인이 필요합니다");
+        HttpServletRequest request = mock(HttpServletRequest.class);
 
-        ResponseEntity<ErrorResponse> response = handler.handleUnauthorizedException(ex);
+        ResponseEntity<?> response = handler.handleUnauthorizedException(ex, request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().error()).isEqualTo("UNAUTHORIZED");
-        assertThat(response.getBody().message()).isEqualTo("로그인이 필요합니다");
+        assertThat(response.getBody()).isInstanceOf(ErrorResponse.class);
+        ErrorResponse body = (ErrorResponse) response.getBody();
+        assertThat(body.error()).isEqualTo("UNAUTHORIZED");
+        assertThat(body.message()).isEqualTo("로그인이 필요합니다");
+    }
+
+    @Test
+    void handleUnauthorizedException_forEventStream_returns401WithoutBody() {
+        UnauthorizedException ex = new UnauthorizedException("세션이 만료되었습니다");
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getHeader("Accept")).thenReturn("text/event-stream");
+
+        ResponseEntity<?> response = handler.handleUnauthorizedException(ex, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody()).isNull();
     }
 
     @Test
