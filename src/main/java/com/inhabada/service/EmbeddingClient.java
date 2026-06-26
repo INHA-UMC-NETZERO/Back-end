@@ -37,7 +37,7 @@ public class EmbeddingClient {
     }
 
     public String embedPost(String title, String description) {
-        return embedToVectorLiteral(title + "\n\n" + description);
+        return embedToVectorLiteral(title);
     }
 
     public String embedQuery(String query) {
