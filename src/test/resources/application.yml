@@ -34,5 +34,10 @@ app:
   matching:
     similarity-threshold: 0.7
     max-results: 5
+  embedding:
+    url: https://seoki.cloud/v1/embeddings
+    model: bge-m3
+    dimension: 1024
+    timeout-seconds: 5
   webview:
     base-url: https://test.inha-bada.app

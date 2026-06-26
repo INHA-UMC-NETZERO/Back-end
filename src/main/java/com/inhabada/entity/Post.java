@@ -39,8 +39,16 @@ public class Post {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private String category;
+    private Category category;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sub_category", length = 30)
+    private SubCategory subCategory;
+
+    @Column(nullable = false, length = 100)
+    private String location;
 
     @Column(name = "image_keys", columnDefinition = "TEXT[]")
     private String[] imageKeys;
@@ -72,15 +80,17 @@ public class Post {
     protected Post() {
     }
 
-    public Post(Long giverId, String title, String description, String category,
-                String[] imageKeys, Integer totalQuantity, String availableTime) {
+    public Post(Long giverId, String title, String description, Category category, SubCategory subCategory,
+                String[] imageKeys, Integer totalQuantity, String location, String availableTime) {
         this.giverId = giverId;
         this.title = title;
         this.description = description;
         this.category = category;
+        this.subCategory = subCategory;
         this.imageKeys = imageKeys;
         this.totalQuantity = totalQuantity;
         this.remainingQuantity = totalQuantity;
+        this.location = location;
         this.availableTime = availableTime;
         this.status = PostStatus.ACTIVE;
     }
@@ -109,8 +119,16 @@ public class Post {
         this.description = description;
     }
 
-    public String getCategory() {
+    public Category getCategory() {
         return category;
+    }
+
+    public SubCategory getSubCategory() {
+        return subCategory;
+    }
+
+    public String getLocation() {
+        return location;
     }
 
     public String[] getImageKeys() {

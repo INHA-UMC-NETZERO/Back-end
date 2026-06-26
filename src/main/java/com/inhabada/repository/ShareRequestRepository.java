@@ -18,6 +18,6 @@ public interface ShareRequestRepository extends JpaRepository<ShareRequest, Long
 
     boolean existsByPostIdAndReceiverIdAndStatus(Long postId, Long receiverId, RequestStatus status);
 
-    @Query("SELECT COALESCE(SUM(r.quantity), 0) FROM ShareRequest r WHERE r.postId = :postId AND r.status = 'PENDING'")
-    int sumPendingQuantityByPostId(@Param("postId") Long postId);
+    @Query("SELECT COALESCE(SUM(r.quantity), 0) FROM ShareRequest r WHERE r.postId = :postId AND r.status = com.inhabada.entity.RequestStatus.APPLIED")
+    int sumAppliedQuantityByPostId(@Param("postId") Long postId);
 }

@@ -60,7 +60,7 @@ public class ShareRequest {
         this.receiverId = receiverId;
         this.requestedTime = requestedTime;
         this.quantity = quantity;
-        this.status = RequestStatus.PENDING;
+        this.status = RequestStatus.APPLIED;
     }
 
     public Long getId() {

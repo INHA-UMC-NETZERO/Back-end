@@ -6,6 +6,7 @@ import com.inhabada.dto.MyRequestResponse;
 import com.inhabada.entity.Post;
 import com.inhabada.entity.PostStatus;
 import com.inhabada.entity.ShareRequest;
+import com.inhabada.entity.SubCategory;
 import com.inhabada.repository.PostRepository;
 import com.inhabada.repository.ShareRequestRepository;
 import com.inhabada.repository.UserRepository;
@@ -57,7 +58,11 @@ public class MyPageService {
         return new MyPostResponse(
                 post.getId(),
                 post.getTitle(),
-                post.getCategory(),
+                post.getCategory().name(),
+                post.getCategory().getLabel(),
+                subCategoryCode(post.getSubCategory()),
+                subCategoryLabel(post.getSubCategory()),
+                post.getLocation(),
                 imageUrlResolver.firstUrl(post.getImageKeys()),
                 post.getRemainingQuantity(),
                 post.getTotalQuantity(),
@@ -84,17 +89,28 @@ public class MyPageService {
     }
 
     private MyRequestResponse toMyRequestResponse(ShareRequest request) {
-        String postTitle = postRepository.findById(request.getPostId())
-                .map(Post::getTitle)
-                .orElse(null);
+        Post post = postRepository.findById(request.getPostId()).orElse(null);
         return new MyRequestResponse(
                 request.getId(),
                 request.getPostId(),
-                postTitle,
+                post == null ? null : post.getTitle(),
+                post == null ? null : post.getCategory().name(),
+                post == null ? null : post.getCategory().getLabel(),
+                post == null ? null : subCategoryCode(post.getSubCategory()),
+                post == null ? null : subCategoryLabel(post.getSubCategory()),
+                post == null ? null : post.getLocation(),
                 request.getQuantity(),
                 request.getRequestedTime(),
                 request.getStatus(),
                 request.getCreatedAt()
         );
+    }
+
+    private String subCategoryCode(SubCategory subCategory) {
+        return subCategory == null ? null : subCategory.name();
+    }
+
+    private String subCategoryLabel(SubCategory subCategory) {
+        return subCategory == null ? null : subCategory.getLabel();
     }
 }

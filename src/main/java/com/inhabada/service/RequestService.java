@@ -54,13 +54,13 @@ public class RequestService {
             throw new ConflictException("요청 수량은 잔여 수량(" + post.getRemainingQuantity() + ") 이하여야 합니다");
         }
 
-        if (shareRequestRepository.existsByPostIdAndReceiverIdAndStatus(postId, receiverId, RequestStatus.PENDING)) {
+        if (shareRequestRepository.existsByPostIdAndReceiverIdAndStatus(postId, receiverId, RequestStatus.APPLIED)) {
             throw new ConflictException("이미 처리 중인 요청이 있습니다");
         }
 
-        int pendingSum = shareRequestRepository.sumPendingQuantityByPostId(postId);
-        if (pendingSum + dto.quantity() > post.getRemainingQuantity()) {
-            int available = post.getRemainingQuantity() - pendingSum;
+        int appliedSum = shareRequestRepository.sumAppliedQuantityByPostId(postId);
+        if (appliedSum + dto.quantity() > post.getRemainingQuantity()) {
+            int available = post.getRemainingQuantity() - appliedSum;
             throw new ConflictException("현재 요청 가능한 수량은 " + Math.max(available, 0) + "개입니다");
         }
 
@@ -86,7 +86,7 @@ public class RequestService {
             throw new ForbiddenException("권한이 없습니다");
         }
 
-        if (request.getStatus() != RequestStatus.PENDING) {
+        if (request.getStatus() != RequestStatus.APPLIED) {
             throw new ConflictException("이미 처리된 요청입니다");
         }
 
@@ -95,8 +95,8 @@ public class RequestService {
         }
 
         post.setRemainingQuantity(post.getRemainingQuantity() - request.getQuantity());
-        request.setStatus(RequestStatus.APPROVED);
-        post.setStatus(PostStatus.RESERVED);
+        request.setStatus(RequestStatus.PENDING);
+        post.setStatus(PostStatus.PENDING);
 
         postRepository.save(post);
         shareRequestRepository.save(request);
@@ -116,7 +116,7 @@ public class RequestService {
             throw new ForbiddenException("권한이 없습니다");
         }
 
-        if (request.getStatus() != RequestStatus.PENDING) {
+        if (request.getStatus() != RequestStatus.APPLIED) {
             throw new ConflictException("이미 처리된 요청입니다");
         }
 
@@ -138,7 +138,7 @@ public class RequestService {
             throw new ForbiddenException("권한이 없습니다");
         }
 
-        if (request.getStatus() != RequestStatus.APPROVED) {
+        if (request.getStatus() != RequestStatus.PENDING) {
             throw new ConflictException("승인된 요청만 완료 처리할 수 있습니다");
         }
 

@@ -112,10 +112,10 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostClosed(PostClosedEvent event) {
         Long postId = event.getPostId();
-        List<ShareRequest> pendingRequests =
-                shareRequestRepository.findByPostIdAndStatus(postId, RequestStatus.PENDING);
+        List<ShareRequest> appliedRequests =
+                shareRequestRepository.findByPostIdAndStatus(postId, RequestStatus.APPLIED);
 
-        for (ShareRequest request : pendingRequests) {
+        for (ShareRequest request : appliedRequests) {
             request.setStatus(RequestStatus.REJECTED);
             shareRequestRepository.save(request);
             notificationService.createNotification(
@@ -125,8 +125,8 @@ public class NotificationEventListener {
                     postId);
         }
 
-        if (!pendingRequests.isEmpty()) {
-            log.info("Post {} closed: {} pending requests auto-rejected", postId, pendingRequests.size());
+        if (!appliedRequests.isEmpty()) {
+            log.info("Post {} closed: {} applied requests auto-rejected", postId, appliedRequests.size());
         }
     }
 }

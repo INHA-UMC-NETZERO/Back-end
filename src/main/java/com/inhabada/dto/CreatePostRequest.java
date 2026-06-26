@@ -1,5 +1,7 @@
 package com.inhabada.dto;
 
+import com.inhabada.entity.Category;
+import com.inhabada.entity.SubCategory;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -16,8 +18,10 @@ public record CreatePostRequest(
         @NotBlank(message = "설명은 필수 항목입니다")
         String description,
 
-        @NotBlank(message = "카테고리는 필수 항목입니다")
-        String category,
+        @NotNull(message = "카테고리는 필수 항목입니다")
+        Category category,
+
+        SubCategory subCategory,
 
         @NotNull(message = "사진은 필수 항목입니다")
         @Size(min = 1, max = 5, message = "사진은 1개 이상 5개 이하여야 합니다")
@@ -27,6 +31,10 @@ public record CreatePostRequest(
         @Min(value = 1, message = "총 수량은 1 이상 99 이하여야 합니다")
         @Max(value = 99, message = "총 수량은 1 이상 99 이하여야 합니다")
         Integer totalQuantity,
+
+        @NotBlank(message = "보관 위치는 필수 항목입니다")
+        @Size(max = 100, message = "보관 위치는 100자 이하여야 합니다")
+        String location,
 
         @NotBlank(message = "나눔 가능 시간은 필수 항목입니다")
         @Size(max = 500, message = "나눔 가능 시간은 500자 이하여야 합니다")

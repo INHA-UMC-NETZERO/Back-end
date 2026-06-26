@@ -8,6 +8,9 @@ public record PostCard(
         String thumbnailUrl,
         Integer remainingQuantity,
         String category,
+        String categoryLabel,
+        String subCategory,
+        String subCategoryLabel,
         PostStatus status,
         boolean closed
 ) {

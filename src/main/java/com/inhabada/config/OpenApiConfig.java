@@ -19,14 +19,14 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("인하바다 (Inha-Bada) API")
                         .version("v0.0.1")
-                        .description("인하대학교 캠퍼스 나눔 플랫폼 백엔드 API. "
-                                + "로그인(/api/auth/login)으로 발급받은 세션 토큰을 우측 상단 Authorize에 입력해 인증 API를 테스트할 수 있습니다."))
+                        .description("인하대학교 구성원을 위한 나눔 플랫폼 백엔드 API입니다. "
+                                + "로그인(/api/auth/login)으로 발급받은 세션 토큰을 Swagger UI 상단 Authorize에 Bearer 토큰으로 입력하면 인증 API를 테스트할 수 있습니다."))
                 .addSecurityItem(new SecurityRequirement().addList(SCHEME_NAME))
                 .components(new Components().addSecuritySchemes(SCHEME_NAME,
                         new SecurityScheme()
                                 .name(SCHEME_NAME)
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
-                                .description("로그인 시 발급되는 UUID 세션 토큰")));
+                                .description("로그인 API에서 발급되는 UUID 세션 토큰")));
     }
 }

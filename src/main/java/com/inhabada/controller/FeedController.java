@@ -5,6 +5,9 @@ import com.inhabada.dto.PostCard;
 import com.inhabada.dto.PostDetailResponse;
 import com.inhabada.exception.ValidationException;
 import com.inhabada.service.PostService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +23,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts")
+@Tag(name = "Feed", description = "나눔 게시글 목록과 상세 조회 API")
 public class FeedController {
 
     private final PostService postService;
@@ -29,11 +33,20 @@ public class FeedController {
     }
 
     @GetMapping
+    @Operation(
+            summary = "게시글 목록 조회",
+            description = "신청 가능한 게시글 목록을 페이지 단위로 조회합니다. category는 FOOD, DRINK, STATIONERY_EVENT, PACKING_ORGANIZING, FURNITURE_SPACE, ETC 같은 enum code를 사용하고, keyword는 제목/설명 검색에 사용합니다."
+    )
     public ResponseEntity<PageResponse<PostCard>> getPosts(
+            @Parameter(description = "카테고리 enum code. 예: FOOD, DRINK, STATIONERY_EVENT, PACKING_ORGANIZING, FURNITURE_SPACE, ETC")
             @RequestParam(required = false) String category,
+            @Parameter(description = "제목 또는 설명 검색어")
             @RequestParam(required = false) String keyword,
+            @Parameter(description = "0부터 시작하는 페이지 번호")
             @RequestParam(name = "page", defaultValue = "0") int pageNumber,
+            @Parameter(description = "페이지 크기. 1 이상 100 이하")
             @RequestParam(name = "size", defaultValue = "20") int size,
+            @Parameter(description = "정렬 순서. latest 또는 oldest")
             @RequestParam(defaultValue = "latest") String order) {
         validatePageRequest(pageNumber, size);
         Pageable pageable = PageRequest.of(pageNumber, size, resolveSort(order));
@@ -42,7 +55,10 @@ public class FeedController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PostDetailResponse> getPost(@PathVariable Long id) {
+    @Operation(summary = "게시글 상세 조회", description = "게시글 ID로 제목, 설명, 이미지, 수량, 위치, 카테고리 label 등을 포함한 상세 정보를 조회합니다.")
+    public ResponseEntity<PostDetailResponse> getPost(
+            @Parameter(description = "조회할 게시글 ID")
+            @PathVariable Long id) {
         return ResponseEntity.ok(postService.getPostById(id));
     }
 
