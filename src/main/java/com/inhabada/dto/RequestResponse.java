@@ -9,7 +9,7 @@ public record RequestResponse(
         Long id,
         Long postId,
         Long receiverId,
-        Long slotId,
+        String requestedTime,
         Integer quantity,
         RequestStatus status,
         LocalDateTime createdAt
@@ -19,7 +19,7 @@ public record RequestResponse(
                 request.getId(),
                 request.getPostId(),
                 request.getReceiverId(),
-                request.getSlotId(),
+                request.getRequestedTime(),
                 request.getQuantity(),
                 request.getStatus(),
                 request.getCreatedAt()

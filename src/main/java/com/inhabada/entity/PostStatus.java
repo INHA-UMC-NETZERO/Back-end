@@ -1,5 +1,5 @@
 package com.inhabada.entity;
 
 public enum PostStatus {
-    ACTIVE, CLOSED
+    ACTIVE, RESERVED, CLOSED
 }

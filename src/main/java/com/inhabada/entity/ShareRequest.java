@@ -34,8 +34,8 @@ public class ShareRequest {
     @Column(name = "receiver_id", nullable = false)
     private Long receiverId;
 
-    @Column(name = "slot_id", nullable = false)
-    private Long slotId;
+    @Column(name = "requested_time", nullable = false, length = 500)
+    private String requestedTime;
 
     @Column(nullable = false)
     private Integer quantity;
@@ -55,10 +55,10 @@ public class ShareRequest {
     protected ShareRequest() {
     }
 
-    public ShareRequest(Long postId, Long receiverId, Long slotId, Integer quantity) {
+    public ShareRequest(Long postId, Long receiverId, String requestedTime, Integer quantity) {
         this.postId = postId;
         this.receiverId = receiverId;
-        this.slotId = slotId;
+        this.requestedTime = requestedTime;
         this.quantity = quantity;
         this.status = RequestStatus.PENDING;
     }
@@ -75,8 +75,8 @@ public class ShareRequest {
         return receiverId;
     }
 
-    public Long getSlotId() {
-        return slotId;
+    public String getRequestedTime() {
+        return requestedTime;
     }
 
     public Integer getQuantity() {

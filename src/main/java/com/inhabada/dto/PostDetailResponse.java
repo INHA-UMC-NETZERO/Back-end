@@ -18,6 +18,6 @@ public record PostDetailResponse(
         PostStatus status,
         boolean closed,
         LocalDateTime createdAt,
-        List<SlotResponse> slots
+        String availableTime
 ) {
 }

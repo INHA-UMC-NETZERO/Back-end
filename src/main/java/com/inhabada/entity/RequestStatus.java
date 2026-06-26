@@ -1,5 +1,5 @@
 package com.inhabada.entity;
 
 public enum RequestStatus {
-    PENDING, APPROVED, REJECTED
+    PENDING, APPROVED, REJECTED, COMPLETED
 }

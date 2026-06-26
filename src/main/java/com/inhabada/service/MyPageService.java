@@ -77,7 +77,7 @@ public class MyPageService {
                 request.getReceiverId(),
                 receiverName,
                 request.getQuantity(),
-                request.getSlotId(),
+                request.getRequestedTime(),
                 request.getStatus(),
                 request.getCreatedAt()
         );
@@ -92,7 +92,7 @@ public class MyPageService {
                 request.getPostId(),
                 postTitle,
                 request.getQuantity(),
-                request.getSlotId(),
+                request.getRequestedTime(),
                 request.getStatus(),
                 request.getCreatedAt()
         );

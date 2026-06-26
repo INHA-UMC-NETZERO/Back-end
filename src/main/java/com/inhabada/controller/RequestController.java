@@ -41,4 +41,10 @@ public class RequestController {
         requestService.rejectRequest(id, userId);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/api/requests/{id}/complete")
+    public ResponseEntity<Void> completeRequest(@CurrentUser Long userId, @PathVariable Long id) {
+        requestService.completeRequest(id, userId);
+        return ResponseEntity.noContent().build();
+    }
 }

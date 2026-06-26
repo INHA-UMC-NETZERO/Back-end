@@ -9,7 +9,7 @@ public record MyRequestResponse(
         Long postId,
         String postTitle,
         Integer quantity,
-        Long slotId,
+        String requestedTime,
         RequestStatus status,
         LocalDateTime createdAt
 ) {

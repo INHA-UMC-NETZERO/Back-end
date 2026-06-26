@@ -1,6 +1,5 @@
 package com.inhabada.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -10,7 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import org.springframework.data.annotation.CreatedDate;
@@ -18,8 +16,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "posts", indexes = {
@@ -55,6 +51,9 @@ public class Post {
     @Column(name = "remaining_quantity", nullable = false)
     private Integer remainingQuantity;
 
+    @Column(name = "available_time", nullable = false, length = 500)
+    private String availableTime;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private PostStatus status;
@@ -70,14 +69,11 @@ public class Post {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Slot> slots = new ArrayList<>();
-
     protected Post() {
     }
 
     public Post(Long giverId, String title, String description, String category,
-                String[] imageKeys, Integer totalQuantity) {
+                String[] imageKeys, Integer totalQuantity, String availableTime) {
         this.giverId = giverId;
         this.title = title;
         this.description = description;
@@ -85,6 +81,7 @@ public class Post {
         this.imageKeys = imageKeys;
         this.totalQuantity = totalQuantity;
         this.remainingQuantity = totalQuantity;
+        this.availableTime = availableTime;
         this.status = PostStatus.ACTIVE;
     }
 
@@ -136,6 +133,14 @@ public class Post {
         this.remainingQuantity = remainingQuantity;
     }
 
+    public String getAvailableTime() {
+        return availableTime;
+    }
+
+    public void setAvailableTime(String availableTime) {
+        this.availableTime = availableTime;
+    }
+
     public PostStatus getStatus() {
         return status;
     }
@@ -154,19 +159,5 @@ public class Post {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
-    }
-
-    public List<Slot> getSlots() {
-        return slots;
-    }
-
-    public void addSlot(Slot slot) {
-        slots.add(slot);
-        slot.setPost(this);
-    }
-
-    public void removeSlot(Slot slot) {
-        slots.remove(slot);
-        slot.setPost(null);
     }
 }

@@ -7,12 +7,12 @@ import com.inhabada.entity.PostStatus;
 import com.inhabada.entity.RequestStatus;
 import com.inhabada.entity.ShareRequest;
 import com.inhabada.event.RequestApprovedEvent;
+import com.inhabada.event.RequestCompletedEvent;
 import com.inhabada.event.RequestCreatedEvent;
 import com.inhabada.event.RequestRejectedEvent;
 import com.inhabada.exception.ConflictException;
 import com.inhabada.exception.ForbiddenException;
 import com.inhabada.exception.NotFoundException;
-import com.inhabada.exception.ValidationException;
 import com.inhabada.repository.PostRepository;
 import com.inhabada.repository.ShareRequestRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -42,18 +42,12 @@ public class RequestService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다"));
 
-        if (post.getStatus() == PostStatus.CLOSED || post.getRemainingQuantity() == 0) {
+        if (post.getStatus() != PostStatus.ACTIVE || post.getRemainingQuantity() == 0) {
             throw new ConflictException("마감된 게시글입니다");
         }
 
         if (post.getGiverId().equals(receiverId)) {
             throw new ForbiddenException("본인 게시글에는 요청할 수 없습니다");
-        }
-
-        boolean slotExists = post.getSlots().stream()
-                .anyMatch(slot -> slot.getId().equals(dto.slotId()));
-        if (!slotExists) {
-            throw new ValidationException("유효하지 않은 수령 일정(Slot)입니다");
         }
 
         if (dto.quantity() > post.getRemainingQuantity()) {
@@ -70,7 +64,7 @@ public class RequestService {
             throw new ConflictException("현재 요청 가능한 수량은 " + Math.max(available, 0) + "개입니다");
         }
 
-        ShareRequest request = new ShareRequest(postId, receiverId, dto.slotId(), dto.quantity());
+        ShareRequest request = new ShareRequest(postId, receiverId, dto.requestedTime(), dto.quantity());
         ShareRequest saved = shareRequestRepository.save(request);
 
         eventPublisher.publishEvent(new RequestCreatedEvent(saved, postId, post.getGiverId()));
@@ -102,10 +96,7 @@ public class RequestService {
 
         post.setRemainingQuantity(post.getRemainingQuantity() - request.getQuantity());
         request.setStatus(RequestStatus.APPROVED);
-
-        if (post.getRemainingQuantity() == 0) {
-            post.setStatus(PostStatus.CLOSED);
-        }
+        post.setStatus(PostStatus.RESERVED);
 
         postRepository.save(post);
         shareRequestRepository.save(request);
@@ -133,5 +124,30 @@ public class RequestService {
         shareRequestRepository.save(request);
 
         eventPublisher.publishEvent(new RequestRejectedEvent(request, request.getReceiverId()));
+    }
+
+    @Transactional
+    public void completeRequest(Long requestId, Long giverId) {
+        ShareRequest request = shareRequestRepository.findById(requestId)
+                .orElseThrow(() -> new NotFoundException("요청을 찾을 수 없습니다"));
+
+        Post post = postRepository.findById(request.getPostId())
+                .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다"));
+
+        if (!post.getGiverId().equals(giverId)) {
+            throw new ForbiddenException("권한이 없습니다");
+        }
+
+        if (request.getStatus() != RequestStatus.APPROVED) {
+            throw new ConflictException("승인된 요청만 완료 처리할 수 있습니다");
+        }
+
+        request.setStatus(RequestStatus.COMPLETED);
+        post.setStatus(PostStatus.CLOSED);
+
+        postRepository.save(post);
+        shareRequestRepository.save(request);
+
+        eventPublisher.publishEvent(new RequestCompletedEvent(request, request.getReceiverId()));
     }
 }
