@@ -11,6 +11,21 @@ spring:
 
 Before starting the application, the target database and user must already exist.
 
+The embedding migration runs automatically from:
+
+```text
+src/main/resources/db/embedding_migration.sql
+```
+
+Because the migration uses the PostgreSQL `vector` type, create the pgvector
+extension once before starting the app:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+On RDS, this may require the master user / `rds_superuser`.
+
 ## RDS connection
 
 - Host: `inhabada-identifier.c054eoe2obxd.us-east-1.rds.amazonaws.com`
