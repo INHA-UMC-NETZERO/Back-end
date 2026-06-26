@@ -73,9 +73,9 @@ public class PostService {
         if (StringUtils.hasText(keyword)) {
             posts = postRepository.searchByKeyword(PostStatus.ACTIVE, keyword.trim(), pageable);
         } else if (StringUtils.hasText(category)) {
-            posts = postRepository.findByStatusAndCategoryOrderByCreatedAtDesc(PostStatus.ACTIVE, category, pageable);
+            posts = postRepository.findByStatusAndCategory(PostStatus.ACTIVE, category, pageable);
         } else {
-            posts = postRepository.findByStatusOrderByCreatedAtDesc(PostStatus.ACTIVE, pageable);
+            posts = postRepository.findByStatus(PostStatus.ACTIVE, pageable);
         }
         return posts.map(this::toPostCard);
     }

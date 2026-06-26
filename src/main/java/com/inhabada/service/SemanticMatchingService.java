@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,7 +57,8 @@ public class SemanticMatchingService {
     @Transactional(readOnly = true)
     public List<MatchResult> findMatchingPosts(String productName) {
         List<Post> candidates = postRepository
-                .findByStatusOrderByCreatedAtDesc(PostStatus.ACTIVE, PageRequest.of(0, CANDIDATE_LIMIT))
+                .findByStatus(PostStatus.ACTIVE,
+                        PageRequest.of(0, CANDIDATE_LIMIT, Sort.by("createdAt").descending()))
                 .getContent();
 
         if (candidates.isEmpty()) {

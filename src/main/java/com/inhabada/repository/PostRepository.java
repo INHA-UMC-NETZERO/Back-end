@@ -12,9 +12,9 @@ import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    Page<Post> findByStatusOrderByCreatedAtDesc(PostStatus status, Pageable pageable);
+    Page<Post> findByStatus(PostStatus status, Pageable pageable);
 
-    Page<Post> findByStatusAndCategoryOrderByCreatedAtDesc(PostStatus status, String category, Pageable pageable);
+    Page<Post> findByStatusAndCategory(PostStatus status, String category, Pageable pageable);
 
     @Query("SELECT p FROM Post p WHERE p.status = :status AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<Post> searchByKeyword(@Param("status") PostStatus status, @Param("keyword") String keyword, Pageable pageable);
