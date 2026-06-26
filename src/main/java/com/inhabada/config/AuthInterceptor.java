@@ -20,12 +20,12 @@ public class AuthInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request,
                              HttpServletResponse response,
                              Object handler) {
+        String token = extractToken(request);
+
         if (isPublicEndpoint(request)) {
             // Optionally resolve user if token is present, but don't require it
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            if (token != null) {
                 try {
-                    String token = authHeader.substring(7);
                     Long userId = sessionService.validateSession(token);
                     request.setAttribute("userId", userId);
                 } catch (UnauthorizedException ignored) {
@@ -35,17 +35,32 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        String authHeader = request.getHeader("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (token == null) {
             throw new UnauthorizedException("로그인이 필요합니다");
         }
 
-        String token = authHeader.substring(7);
         Long userId = sessionService.validateSession(token);
         request.setAttribute("userId", userId);
 
         return true;
+    }
+
+    /**
+     * Authorization: Bearer 헤더를 우선 사용하고,
+     * 헤더를 보낼 수 없는 SSE(EventSource) 연결을 위해 token 쿼리 파라미터로 폴백한다.
+     */
+    private String extractToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
+        String tokenParam = request.getParameter("token");
+        if (tokenParam != null && !tokenParam.isBlank()) {
+            return tokenParam;
+        }
+
+        return null;
     }
 
     private boolean isPublicEndpoint(HttpServletRequest request) {

@@ -15,15 +15,21 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationEmitterRegistry emitterRegistry;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(NotificationRepository notificationRepository,
+                               NotificationEmitterRegistry emitterRegistry) {
         this.notificationRepository = notificationRepository;
+        this.emitterRegistry = emitterRegistry;
     }
 
     @Transactional
     public void createNotification(Long userId, NotificationType type, String message, Long relatedPostId) {
         Notification notification = new Notification(userId, type, message, relatedPostId);
-        notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+
+        // 연결돼 있으면 실시간 전송 (없으면 무시 — 다음 조회 시 GET으로 복구)
+        emitterRegistry.send(userId, "notification", NotificationResponse.from(saved));
     }
 
     @Transactional(readOnly = true)
