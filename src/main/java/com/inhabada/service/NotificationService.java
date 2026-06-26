@@ -3,8 +3,6 @@ package com.inhabada.service;
 import com.inhabada.dto.NotificationResponse;
 import com.inhabada.entity.Notification;
 import com.inhabada.entity.NotificationType;
-import com.inhabada.exception.ForbiddenException;
-import com.inhabada.exception.NotFoundException;
 import com.inhabada.repository.NotificationRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,16 +36,11 @@ public class NotificationService {
                 .map(NotificationResponse::from);
     }
 
+    /**
+     * 알림함을 열 때 호출. 해당 사용자의 안 읽은 알림을 모두 읽음 처리한다.
+     */
     @Transactional
-    public void markAsRead(Long notificationId, Long userId) {
-        Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new NotFoundException("알림을 찾을 수 없습니다"));
-
-        if (!notification.getUserId().equals(userId)) {
-            throw new ForbiddenException("권한이 없습니다");
-        }
-
-        notification.setIsRead(true);
-        notificationRepository.save(notification);
+    public void markAllAsRead(Long userId) {
+        notificationRepository.markAllAsReadByUserId(userId);
     }
 }
