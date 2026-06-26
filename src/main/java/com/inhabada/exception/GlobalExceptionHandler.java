@@ -70,7 +70,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
         ErrorResponse response = new ErrorResponse(
                 "VALIDATION_ERROR",
-                "Invalid request parameter",
+                "요청 파라미터 형식이 올바르지 않습니다",
                 List.of(ex.getName())
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -80,7 +80,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMissingServletRequestParameter(MissingServletRequestParameterException ex) {
         ErrorResponse response = new ErrorResponse(
                 "VALIDATION_ERROR",
-                "Missing required request parameter",
+                "필수 요청 파라미터가 누락되었습니다",
                 List.of(ex.getParameterName())
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -88,13 +88,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
-        ErrorResponse response = new ErrorResponse("METHOD_NOT_ALLOWED", "HTTP method is not supported");
+        ErrorResponse response = new ErrorResponse("METHOD_NOT_ALLOWED", "지원하지 않는 HTTP 메서드입니다");
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex) {
-        ErrorResponse response = new ErrorResponse("UNSUPPORTED_MEDIA_TYPE", "Content-Type is not supported");
+        ErrorResponse response = new ErrorResponse("UNSUPPORTED_MEDIA_TYPE", "지원하지 않는 Content-Type입니다");
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(response);
     }
 

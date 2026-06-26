@@ -48,10 +48,10 @@ public class FeedController {
 
     private void validatePageRequest(int pageNumber, int size) {
         if (pageNumber < 0) {
-            throw new ValidationException("page must be greater than or equal to 0", List.of("page"));
+            throw new ValidationException("page는 0 이상이어야 합니다", List.of("page"));
         }
         if (size < 1 || size > 100) {
-            throw new ValidationException("size must be between 1 and 100", List.of("size"));
+            throw new ValidationException("size는 1 이상 100 이하여야 합니다", List.of("size"));
         }
     }
 
@@ -60,7 +60,7 @@ public class FeedController {
             return Sort.by("createdAt").ascending();
         }
         if (!"latest".equalsIgnoreCase(order)) {
-            throw new ValidationException("order must be latest or oldest", List.of("order"));
+            throw new ValidationException("order는 latest 또는 oldest만 사용할 수 있습니다", List.of("order"));
         }
         return Sort.by("createdAt").descending();
     }

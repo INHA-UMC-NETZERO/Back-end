@@ -84,24 +84,27 @@ class FeedControllerTest {
         mockMvc.perform(get("/api/posts")
                         .param("page", "-1"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").value("page는 0 이상이어야 합니다"));
     }
 
     @Test
     void getPosts_rejectsUnknownOrderAsBadRequest() throws Exception {
         mockMvc.perform(get("/api/posts")
-                        .param("order", "popular"))
+                .param("order", "popular"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").value("order는 latest 또는 oldest만 사용할 수 있습니다"))
                 .andExpect(jsonPath("$.fields[0]").value("order"));
     }
 
     @Test
     void getPost_rejectsNonNumericIdAsBadRequest() throws Exception {
         mockMvc.perform(get("/api/posts/not-a-number")
-                        .header("Authorization", "Bearer valid-token"))
+                .header("Authorization", "Bearer valid-token"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").value("요청 파라미터 형식이 올바르지 않습니다"))
                 .andExpect(jsonPath("$.fields[0]").value("id"));
     }
 
@@ -118,6 +121,7 @@ class FeedControllerTest {
     void unsupportedMethod_returnsMethodNotAllowed() throws Exception {
         mockMvc.perform(put("/api/posts"))
                 .andExpect(status().isMethodNotAllowed())
-                .andExpect(jsonPath("$.error").value("METHOD_NOT_ALLOWED"));
+                .andExpect(jsonPath("$.error").value("METHOD_NOT_ALLOWED"))
+                .andExpect(jsonPath("$.message").value("지원하지 않는 HTTP 메서드입니다"));
     }
 }
