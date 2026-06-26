@@ -22,6 +22,8 @@ import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(FeedController.class)
@@ -73,5 +75,38 @@ class FeedControllerTest {
         Pageable pageable = pageableCaptor.getValue();
         assertThat(pageable.getSort().getOrderFor("createdAt")).isNotNull();
         assertThat(pageable.getSort().getOrderFor("createdAt").isAscending()).isTrue();
+    }
+
+    @Test
+    void getPosts_rejectsNegativePageAsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/posts")
+                        .param("page", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void getPosts_rejectsUnknownOrderAsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/posts")
+                        .param("order", "popular"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fields[0]").value("order"));
+    }
+
+    @Test
+    void getPost_rejectsNonNumericIdAsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/posts/not-a-number")
+                        .header("Authorization", "Bearer valid-token"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fields[0]").value("id"));
+    }
+
+    @Test
+    void unsupportedMethod_returnsMethodNotAllowed() throws Exception {
+        mockMvc.perform(put("/api/posts"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.error").value("METHOD_NOT_ALLOWED"));
     }
 }

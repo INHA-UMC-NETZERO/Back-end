@@ -3,6 +3,7 @@ package com.inhabada.controller;
 import com.inhabada.dto.PageResponse;
 import com.inhabada.dto.PostCard;
 import com.inhabada.dto.PostDetailResponse;
+import com.inhabada.exception.ValidationException;
 import com.inhabada.service.PostService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -29,9 +32,10 @@ public class FeedController {
     public ResponseEntity<PageResponse<PostCard>> getPosts(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "0") int pageNumber,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(name = "page", defaultValue = "0") int pageNumber,
+            @RequestParam(name = "size", defaultValue = "20") int size,
             @RequestParam(defaultValue = "latest") String order) {
+        validatePageRequest(pageNumber, size);
         Pageable pageable = PageRequest.of(pageNumber, size, resolveSort(order));
         Page<PostCard> result = postService.getActivePosts(category, keyword, pageable);
         return ResponseEntity.ok(PageResponse.from(result, card -> card));
@@ -42,9 +46,21 @@ public class FeedController {
         return ResponseEntity.ok(postService.getPostById(id));
     }
 
+    private void validatePageRequest(int pageNumber, int size) {
+        if (pageNumber < 0) {
+            throw new ValidationException("page must be greater than or equal to 0", List.of("page"));
+        }
+        if (size < 1 || size > 100) {
+            throw new ValidationException("size must be between 1 and 100", List.of("size"));
+        }
+    }
+
     private Sort resolveSort(String order) {
         if ("oldest".equalsIgnoreCase(order)) {
             return Sort.by("createdAt").ascending();
+        }
+        if (!"latest".equalsIgnoreCase(order)) {
+            throw new ValidationException("order must be latest or oldest", List.of("order"));
         }
         return Sort.by("createdAt").descending();
     }
