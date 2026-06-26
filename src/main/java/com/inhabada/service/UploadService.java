@@ -1,54 +1,58 @@
 package com.inhabada.service;
 
-import com.inhabada.dto.PresignedUrlRequest;
-import com.inhabada.dto.PresignedUrlResponse;
+import com.inhabada.dto.UploadResponse;
 import com.inhabada.exception.ValidationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
-import java.time.Duration;
+import java.io.IOException;
 import java.util.UUID;
 
 @Service
 public class UploadService {
 
-    private final S3Presigner s3Presigner;
+    private final S3Client s3Client;
+    private final ImageUrlResolver imageUrlResolver;
     private final String bucketName;
-    private final int expirationMinutes;
 
-    public UploadService(S3Presigner s3Presigner,
-                         @Value("${aws.s3.bucket-name}") String bucketName,
-                         @Value("${aws.s3.presigned-url-expiration-minutes:10}") int expirationMinutes) {
-        this.s3Presigner = s3Presigner;
+    public UploadService(S3Client s3Client,
+                         ImageUrlResolver imageUrlResolver,
+                         @Value("${aws.s3.bucket-name}") String bucketName) {
+        this.s3Client = s3Client;
+        this.imageUrlResolver = imageUrlResolver;
         this.bucketName = bucketName;
-        this.expirationMinutes = expirationMinutes;
     }
 
-    public PresignedUrlResponse generatePresignedUrl(PresignedUrlRequest request) {
-        if (!request.contentType().startsWith("image/")) {
+    public UploadResponse upload(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new ValidationException("업로드할 파일이 없습니다");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
             throw new ValidationException("이미지 파일만 업로드할 수 있습니다");
         }
 
-        String key = buildKey(request.fileName());
+        String key = buildKey(file.getOriginalFilename());
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
-                .contentType(request.contentType())
+                .contentType(contentType)
                 .build();
 
-        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(expirationMinutes))
-                .putObjectRequest(putObjectRequest)
-                .build();
+        try {
+            s3Client.putObject(putObjectRequest,
+                    RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 업로드에 실패했습니다", e);
+        }
 
-        PresignedPutObjectRequest presigned = s3Presigner.presignPutObject(presignRequest);
-
-        return new PresignedUrlResponse(presigned.url().toString(), key, expirationMinutes);
+        return new UploadResponse(key, imageUrlResolver.toUrl(key));
     }
 
     private String buildKey(String fileName) {
@@ -59,6 +63,9 @@ public class UploadService {
     }
 
     private String extractExtension(String fileName) {
+        if (fileName == null) {
+            return "";
+        }
         int dot = fileName.lastIndexOf('.');
         if (dot < 0 || dot == fileName.length() - 1) {
             return "";

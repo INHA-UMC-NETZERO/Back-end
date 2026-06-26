@@ -29,13 +29,16 @@ spring:
       mode: always
       schema-locations: classpath:db/embedding_migration.sql
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
 aws:
-  region: ap-northeast-2
+  region: us-east-1
   s3:
-    bucket-name: inha-bada-images
-    presigned-url-expiration-minutes: 10
-    max-file-size-mb: 10
-    public-base-url: https://inha-bada-images.s3.ap-northeast-2.amazonaws.com
+    bucket-name: netzero-15-s3
+    public-base-url: https://netzero-15-s3.s3.us-east-1.amazonaws.com
   bedrock:
     model-id: anthropic.claude-3-haiku-20240307-v1:0
     max-tokens: 1024
