@@ -58,9 +58,7 @@ public class MyPageService {
         return new MyPostResponse(
                 post.getId(),
                 post.getTitle(),
-                post.getCategory().name(),
                 post.getCategory().getLabel(),
-                subCategoryCode(post.getSubCategory()),
                 subCategoryLabel(post.getSubCategory()),
                 post.getLocation(),
                 imageUrlResolver.firstUrl(post.getImageKeys()),
@@ -94,9 +92,7 @@ public class MyPageService {
                 request.getId(),
                 request.getPostId(),
                 post == null ? null : post.getTitle(),
-                post == null ? null : post.getCategory().name(),
                 post == null ? null : post.getCategory().getLabel(),
-                post == null ? null : subCategoryCode(post.getSubCategory()),
                 post == null ? null : subCategoryLabel(post.getSubCategory()),
                 post == null ? null : post.getLocation(),
                 request.getQuantity(),
@@ -104,10 +100,6 @@ public class MyPageService {
                 request.getStatus(),
                 request.getCreatedAt()
         );
-    }
-
-    private String subCategoryCode(SubCategory subCategory) {
-        return subCategory == null ? null : subCategory.name();
     }
 
     private String subCategoryLabel(SubCategory subCategory) {

@@ -88,10 +88,8 @@ class PostServiceTest {
         assertThat(saved.getSubCategory()).isEqualTo(SubCategory.SNACK);
         assertThat(saved.getLocation()).isEqualTo("building 5 lobby");
         assertThat(saved.getAvailableTime()).isEqualTo("weekday evening");
-        assertThat(response.category()).isEqualTo("FOOD");
-        assertThat(response.categoryLabel()).isEqualTo("식품");
-        assertThat(response.subCategory()).isEqualTo("SNACK");
-        assertThat(response.subCategoryLabel()).isEqualTo("과자");
+        assertThat(response.category()).isEqualTo("식품");
+        assertThat(response.subCategory()).isEqualTo("과자");
         assertThat(response.location()).isEqualTo("building 5 lobby");
         verify(embeddingClient).embedPost("snack share", "sharing leftover snacks");
         verify(postRepository).updateEmbedding(100L, "[0.1,0.2,0.3]");
@@ -122,10 +120,8 @@ class PostServiceTest {
 
         PostDetailResponse response = postService.createPost(1L, request);
 
-        assertThat(response.category()).isEqualTo("ETC");
-        assertThat(response.categoryLabel()).isEqualTo("기타");
+        assertThat(response.category()).isEqualTo("기타");
         assertThat(response.subCategory()).isNull();
-        assertThat(response.subCategoryLabel()).isNull();
     }
 
     @Test
@@ -160,6 +156,17 @@ class PostServiceTest {
 
         verify(postRepository).searchByCategoryAndKeyword(PostStatus.ACTIVE, Category.FOOD, "snack", pageable);
         verify(postRepository, never()).searchByKeyword(any(), any(), any());
+    }
+
+    @Test
+    void getActivePosts_filtersByCategoryLabelWhenKeywordPresent() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(postRepository.searchByCategoryAndKeyword(PostStatus.ACTIVE, Category.FOOD, "snack", pageable))
+                .thenReturn(new PageImpl<>(List.of(), pageable, 0));
+
+        postService.getActivePosts("식품", " snack ", pageable);
+
+        verify(postRepository).searchByCategoryAndKeyword(PostStatus.ACTIVE, Category.FOOD, "snack", pageable);
     }
 
     @Test

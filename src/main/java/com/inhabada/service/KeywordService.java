@@ -16,9 +16,12 @@ public class KeywordService {
     private static final int MAX_KEYWORDS = 20;
 
     private final KeywordSubscriptionRepository keywordSubscriptionRepository;
+    private final EmbeddingClient embeddingClient;
 
-    public KeywordService(KeywordSubscriptionRepository keywordSubscriptionRepository) {
+    public KeywordService(KeywordSubscriptionRepository keywordSubscriptionRepository,
+                          EmbeddingClient embeddingClient) {
         this.keywordSubscriptionRepository = keywordSubscriptionRepository;
+        this.embeddingClient = embeddingClient;
     }
 
     @Transactional(readOnly = true)
@@ -43,8 +46,10 @@ public class KeywordService {
             throw new ValidationException("관심 키워드는 최대 " + MAX_KEYWORDS + "개까지 등록할 수 있습니다");
         }
 
+        String embedding = embeddingClient.embedQuery(normalized);
         KeywordSubscription saved =
                 keywordSubscriptionRepository.save(new KeywordSubscription(userId, normalized));
+        keywordSubscriptionRepository.updateEmbedding(saved.getId(), embedding);
         return KeywordResponse.from(saved);
     }
 

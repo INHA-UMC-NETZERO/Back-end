@@ -39,10 +39,10 @@ public class RequestService {
 
     @Transactional
     public RequestResponse createRequest(Long receiverId, Long postId, CreateRequestDto dto) {
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findByIdForUpdate(postId)
                 .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다"));
 
-        if (post.getStatus() != PostStatus.ACTIVE || post.getRemainingQuantity() == 0) {
+        if (post.getStatus() == PostStatus.CLOSED || post.getRemainingQuantity() <= 0) {
             throw new ConflictException("마감된 게시글입니다");
         }
 
@@ -94,9 +94,10 @@ public class RequestService {
             throw new ConflictException("잔여 수량이 부족합니다");
         }
 
-        post.setRemainingQuantity(post.getRemainingQuantity() - request.getQuantity());
+        int remainingQuantity = post.getRemainingQuantity() - request.getQuantity();
+        post.setRemainingQuantity(remainingQuantity);
         request.setStatus(RequestStatus.PENDING);
-        post.setStatus(PostStatus.PENDING);
+        post.setStatus(remainingQuantity == 0 ? PostStatus.PENDING : PostStatus.ACTIVE);
 
         postRepository.save(post);
         shareRequestRepository.save(request);

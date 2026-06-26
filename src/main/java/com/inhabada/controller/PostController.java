@@ -31,7 +31,7 @@ public class PostController {
     @PostMapping
     @Operation(
             summary = "게시글 등록",
-            description = "인증된 사용자가 나눔 게시글을 등록합니다. category/subCategory는 영어 enum code를 사용합니다. ETC는 subCategory 없이 등록할 수 있고, 그 외 카테고리는 해당 카테고리에 속한 subCategory가 필요합니다."
+            description = "인증된 사용자가 나눔 게시글을 등록합니다. category/subCategory는 식품, 과자 같은 한글 label을 사용합니다. 기타는 subCategory 없이 등록할 수 있고, 그 외 카테고리는 해당 카테고리에 속한 subCategory가 필요합니다. 기존 영어 enum code도 호환됩니다."
     )
     public ResponseEntity<PostDetailResponse> createPost(@CurrentUser Long userId,
                                                          @Valid @RequestBody CreatePostRequest request) {

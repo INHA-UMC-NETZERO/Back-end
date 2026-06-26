@@ -10,6 +10,7 @@ import com.inhabada.repository.ShareRequestRepository;
 import com.inhabada.service.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
@@ -20,8 +21,6 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component
 public class NotificationEventListener {
@@ -31,13 +30,17 @@ public class NotificationEventListener {
     private final KeywordSubscriptionRepository keywordSubscriptionRepository;
     private final ShareRequestRepository shareRequestRepository;
     private final NotificationService notificationService;
+    private final double keywordSimilarityThreshold;
 
     public NotificationEventListener(KeywordSubscriptionRepository keywordSubscriptionRepository,
                                      ShareRequestRepository shareRequestRepository,
-                                     NotificationService notificationService) {
+                                     NotificationService notificationService,
+                                     @Value("${app.keyword-matching.similarity-threshold:0.7}")
+                                     double keywordSimilarityThreshold) {
         this.keywordSubscriptionRepository = keywordSubscriptionRepository;
         this.shareRequestRepository = shareRequestRepository;
         this.notificationService = notificationService;
+        this.keywordSimilarityThreshold = keywordSimilarityThreshold;
     }
 
     @Async
@@ -46,25 +49,21 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostCreated(PostCreatedEvent event) {
         Post post = event.getPost();
-        String searchText = (post.getTitle() + " " + post.getDescription()).toLowerCase();
+        List<KeywordSubscription> subscriptions = keywordSubscriptionRepository.findSimilarByPostEmbedding(
+                post.getId(),
+                post.getGiverId(),
+                keywordSimilarityThreshold
+        );
 
-        List<KeywordSubscription> allSubscriptions = keywordSubscriptionRepository.findAll();
-        Map<String, List<KeywordSubscription>> keywordGroups = allSubscriptions.stream()
-                .collect(Collectors.groupingBy(KeywordSubscription::getKeyword));
-
-        for (Map.Entry<String, List<KeywordSubscription>> entry : keywordGroups.entrySet()) {
-            String keyword = entry.getKey();
-            if (!searchText.contains(keyword.toLowerCase())) {
-                continue;
-            }
-            String message = "관심 키워드 '" + keyword + "'에 매칭되는 새 게시글이 등록되었습니다: " + post.getTitle();
-            for (KeywordSubscription sub : entry.getValue()) {
-                // 본인 게시글에는 알림 미전송
-                if (!sub.getUserId().equals(post.getGiverId())) {
-                    notificationService.createNotification(
-                            sub.getUserId(), NotificationType.KEYWORD_MATCH, message, post.getId());
-                }
-            }
+        for (KeywordSubscription subscription : subscriptions) {
+            String message = "관심 키워드 '" + subscription.getKeyword() + "'와 유사한 새 게시글이 등록되었습니다: "
+                    + post.getTitle();
+            notificationService.createNotification(
+                    subscription.getUserId(),
+                    NotificationType.KEYWORD_MATCH,
+                    message,
+                    post.getId()
+            );
         }
     }
 

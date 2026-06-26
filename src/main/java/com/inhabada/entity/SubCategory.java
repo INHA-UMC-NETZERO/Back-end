@@ -1,5 +1,8 @@
 package com.inhabada.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum SubCategory {
     CUP_RAMEN(Category.FOOD, "컵라면"),
     SNACK(Category.FOOD, "과자"),
@@ -34,10 +37,26 @@ public enum SubCategory {
         this.label = label;
     }
 
+    @JsonCreator
+    public static SubCategory from(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String normalized = value.trim();
+        for (SubCategory subCategory : values()) {
+            if (subCategory.name().equalsIgnoreCase(normalized) || subCategory.label.equals(normalized)) {
+                return subCategory;
+            }
+        }
+        throw new IllegalArgumentException("지원하지 않는 하위 카테고리입니다: " + value);
+    }
+
     public Category getCategory() {
         return category;
     }
 
+    @JsonValue
     public String getLabel() {
         return label;
     }

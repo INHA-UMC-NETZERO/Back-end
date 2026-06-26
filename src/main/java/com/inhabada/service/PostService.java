@@ -125,9 +125,7 @@ public class PostService {
                 post.getTitle(),
                 imageUrlResolver.firstUrl(post.getImageKeys()),
                 post.getRemainingQuantity(),
-                post.getCategory().name(),
                 post.getCategory().getLabel(),
-                subCategoryCode(post.getSubCategory()),
                 subCategoryLabel(post.getSubCategory()),
                 post.getStatus(),
                 closed
@@ -145,9 +143,7 @@ public class PostService {
                 post.getId(),
                 post.getTitle(),
                 post.getDescription(),
-                post.getCategory().name(),
                 post.getCategory().getLabel(),
-                subCategoryCode(post.getSubCategory()),
                 subCategoryLabel(post.getSubCategory()),
                 imageUrlResolver.toUrls(post.getImageKeys()),
                 post.getRemainingQuantity(),
@@ -185,14 +181,10 @@ public class PostService {
 
     private Category parseCategory(String category) {
         try {
-            return Category.valueOf(category.trim());
+            return Category.from(category);
         } catch (IllegalArgumentException ex) {
             throw new ValidationException("지원하지 않는 카테고리입니다", List.of("category"));
         }
-    }
-
-    private String subCategoryCode(SubCategory subCategory) {
-        return subCategory == null ? null : subCategory.name();
     }
 
     private String subCategoryLabel(SubCategory subCategory) {

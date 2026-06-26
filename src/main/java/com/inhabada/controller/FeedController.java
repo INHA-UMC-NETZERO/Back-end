@@ -35,10 +35,10 @@ public class FeedController {
     @GetMapping
     @Operation(
             summary = "게시글 목록 조회",
-            description = "신청 가능한 게시글 목록을 페이지 단위로 조회합니다. category는 FOOD, DRINK, STATIONERY_EVENT, PACKING_ORGANIZING, FURNITURE_SPACE, ETC 같은 enum code를 사용하고, keyword는 제목/설명 검색에 사용합니다."
+            description = "신청 가능한 게시글 목록을 페이지 단위로 조회합니다. category는 식품, 음료, 문구/행사, 포장/정리, 가구/공간, 기타 같은 한글 label을 사용합니다. 기존 영어 enum code도 호환됩니다."
     )
     public ResponseEntity<PageResponse<PostCard>> getPosts(
-            @Parameter(description = "카테고리 enum code. 예: FOOD, DRINK, STATIONERY_EVENT, PACKING_ORGANIZING, FURNITURE_SPACE, ETC")
+            @Parameter(description = "카테고리 한글 label. 예: 식품, 음료, 문구/행사, 포장/정리, 가구/공간, 기타. 기존 enum code도 허용됩니다.")
             @RequestParam(required = false) String category,
             @Parameter(description = "제목 또는 설명 검색어")
             @RequestParam(required = false) String keyword,
@@ -55,7 +55,7 @@ public class FeedController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "게시글 상세 조회", description = "게시글 ID로 제목, 설명, 이미지, 수량, 위치, 카테고리 label 등을 포함한 상세 정보를 조회합니다.")
+    @Operation(summary = "게시글 상세 조회", description = "게시글 ID로 제목, 설명, 이미지, 수량, 위치, 한글 카테고리 정보를 포함한 상세 정보를 조회합니다.")
     public ResponseEntity<PostDetailResponse> getPost(
             @Parameter(description = "조회할 게시글 ID")
             @PathVariable Long id) {
