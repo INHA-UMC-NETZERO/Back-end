@@ -52,8 +52,12 @@ public class AuthInterceptor implements HandlerInterceptor {
         String method = request.getMethod();
         String uri = request.getRequestURI();
 
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            return true;
+        }
+
         // GET /api/posts (feed listing) is public
-        if ("GET".equalsIgnoreCase(method) && uri.matches("/api/posts(\\?.*)?$")) {
+        if ("GET".equalsIgnoreCase(method) && uri.matches("/api/posts(/\\d+)?")) {
             return true;
         }
 

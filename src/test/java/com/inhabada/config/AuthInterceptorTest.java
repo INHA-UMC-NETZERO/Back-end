@@ -81,6 +81,27 @@ class AuthInterceptorTest {
     }
 
     @Test
+    void preHandle_shouldAllowGetPostDetailWithoutAuth() {
+        when(request.getMethod()).thenReturn("GET");
+        when(request.getRequestURI()).thenReturn("/api/posts/123");
+        when(request.getHeader("Authorization")).thenReturn(null);
+
+        boolean result = authInterceptor.preHandle(request, response, new Object());
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    void preHandle_shouldAllowCorsPreflightWithoutAuth() {
+        when(request.getMethod()).thenReturn("OPTIONS");
+        when(request.getRequestURI()).thenReturn("/api/posts");
+
+        boolean result = authInterceptor.preHandle(request, response, new Object());
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
     void preHandle_shouldRequireAuthForPostPosts() {
         when(request.getMethod()).thenReturn("POST");
         when(request.getRequestURI()).thenReturn("/api/posts");

@@ -1,6 +1,7 @@
 package com.inhabada.controller;
 
 import com.inhabada.dto.PostCard;
+import com.inhabada.exception.NotFoundException;
 import com.inhabada.service.PostService;
 import com.inhabada.service.SessionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +22,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -101,6 +103,15 @@ class FeedControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.fields[0]").value("id"));
+    }
+
+    @Test
+    void getPostDetail_isPublicAndReachesControllerWithoutAuth() throws Exception {
+        doThrow(new NotFoundException("not found")).when(postService).getPostById(999L);
+
+        mockMvc.perform(get("/api/posts/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
     }
 
     @Test
