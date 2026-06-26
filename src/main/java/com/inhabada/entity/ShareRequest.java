@@ -44,6 +44,18 @@ public class ShareRequest {
     @Column(nullable = false, length = 10)
     private RequestStatus status;
 
+    @Column(name = "total_carbon_saving_gram")
+    private Long totalCarbonSavingGram;
+
+    @Column(name = "giver_carbon_saving_gram")
+    private Long giverCarbonSavingGram;
+
+    @Column(name = "receiver_carbon_saving_gram")
+    private Long receiverCarbonSavingGram;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -89,6 +101,33 @@ public class ShareRequest {
 
     public void setStatus(RequestStatus status) {
         this.status = status;
+    }
+
+    public Long getTotalCarbonSavingGram() {
+        return totalCarbonSavingGram;
+    }
+
+    public Long getGiverCarbonSavingGram() {
+        return giverCarbonSavingGram;
+    }
+
+    public Long getReceiverCarbonSavingGram() {
+        return receiverCarbonSavingGram;
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void complete(long totalCarbonSavingGram,
+                         long giverCarbonSavingGram,
+                         long receiverCarbonSavingGram,
+                         LocalDateTime completedAt) {
+        this.status = RequestStatus.COMPLETED;
+        this.totalCarbonSavingGram = totalCarbonSavingGram;
+        this.giverCarbonSavingGram = giverCarbonSavingGram;
+        this.receiverCarbonSavingGram = receiverCarbonSavingGram;
+        this.completedAt = completedAt;
     }
 
     public LocalDateTime getCreatedAt() {

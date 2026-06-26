@@ -8,6 +8,7 @@ import com.inhabada.entity.PostStatus;
 import com.inhabada.entity.RequestStatus;
 import com.inhabada.entity.ShareRequest;
 import com.inhabada.entity.SubCategory;
+import com.inhabada.entity.User;
 import com.inhabada.event.RequestApprovedEvent;
 import com.inhabada.event.RequestCompletedEvent;
 import com.inhabada.event.RequestCreatedEvent;
@@ -16,6 +17,7 @@ import com.inhabada.exception.ConflictException;
 import com.inhabada.exception.ForbiddenException;
 import com.inhabada.repository.PostRepository;
 import com.inhabada.repository.ShareRequestRepository;
+import com.inhabada.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,13 +45,22 @@ class RequestServiceTest {
     private ShareRequestRepository shareRequestRepository;
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
     private ApplicationEventPublisher eventPublisher;
 
     private RequestService requestService;
 
     @BeforeEach
     void setUp() {
-        requestService = new RequestService(postRepository, shareRequestRepository, eventPublisher);
+        requestService = new RequestService(
+                postRepository,
+                shareRequestRepository,
+                userRepository,
+                new CarbonSavingService(),
+                eventPublisher
+        );
     }
 
     @Test
@@ -199,6 +210,25 @@ class RequestServiceTest {
     }
 
     @Test
+    void approveRequest_rejectsWhenRequestQuantityExceedsCurrentRemainingQuantity() {
+        Post post = post();
+        post.setRemainingQuantity(1);
+        ShareRequest request = new ShareRequest(100L, 20L, "friday evening", 2);
+
+        when(shareRequestRepository.findById(200L)).thenReturn(Optional.of(request));
+        when(postRepository.findById(100L)).thenReturn(Optional.of(post));
+
+        assertThatThrownBy(() -> requestService.approveRequest(200L, 10L))
+                .isInstanceOf(ConflictException.class);
+
+        assertThat(post.getRemainingQuantity()).isEqualTo(1);
+        assertThat(request.getStatus()).isEqualTo(RequestStatus.APPLIED);
+        verify(postRepository, never()).save(any(Post.class));
+        verify(shareRequestRepository, never()).save(any(ShareRequest.class));
+        verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
     void rejectRequest_marksAppliedRequestRejected() {
         Post post = post();
         ShareRequest request = new ShareRequest(100L, 20L, "friday evening", 1);
@@ -244,22 +274,55 @@ class RequestServiceTest {
     }
 
     @Test
-    void completeRequest_marksPendingRequestCompletedAndPostClosed() {
+    void completeRequest_storesCarbonSnapshotAndKeepsPostOpenWhenRemainingQuantityExists() {
         Post post = post();
         post.setStatus(PostStatus.PENDING);
         ShareRequest request = new ShareRequest(100L, 20L, "friday evening", 1);
         request.setStatus(RequestStatus.PENDING);
+        User giver = new User("giver@inha.edu", "giver");
+        User receiver = new User("receiver@inha.edu", "receiver");
 
         when(shareRequestRepository.findById(200L)).thenReturn(Optional.of(request));
         when(postRepository.findById(100L)).thenReturn(Optional.of(post));
+        when(userRepository.findById(10L)).thenReturn(Optional.of(giver));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(receiver));
+
+        requestService.completeRequest(200L, 10L);
+
+        assertThat(request.getStatus()).isEqualTo(RequestStatus.COMPLETED);
+        assertThat(request.getTotalCarbonSavingGram()).isEqualTo(250L);
+        assertThat(request.getGiverCarbonSavingGram()).isEqualTo(125L);
+        assertThat(request.getReceiverCarbonSavingGram()).isEqualTo(125L);
+        assertThat(request.getCompletedAt()).isNotNull();
+        assertThat(giver.getTotalCarbonSavingGram()).isEqualTo(125L);
+        assertThat(receiver.getTotalCarbonSavingGram()).isEqualTo(125L);
+        assertThat(post.getStatus()).isEqualTo(PostStatus.PENDING);
+        verify(postRepository).save(post);
+        verify(shareRequestRepository).save(request);
+        verify(userRepository).save(giver);
+        verify(userRepository).save(receiver);
+        verify(eventPublisher).publishEvent(any(RequestCompletedEvent.class));
+    }
+
+    @Test
+    void completeRequest_closesPostWhenRemainingQuantityIsZero() {
+        Post post = post();
+        post.setRemainingQuantity(0);
+        post.setStatus(PostStatus.PENDING);
+        ShareRequest request = new ShareRequest(100L, 20L, "friday evening", 1);
+        request.setStatus(RequestStatus.PENDING);
+        User giver = new User("giver@inha.edu", "giver");
+        User receiver = new User("receiver@inha.edu", "receiver");
+
+        when(shareRequestRepository.findById(200L)).thenReturn(Optional.of(request));
+        when(postRepository.findById(100L)).thenReturn(Optional.of(post));
+        when(userRepository.findById(10L)).thenReturn(Optional.of(giver));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(receiver));
 
         requestService.completeRequest(200L, 10L);
 
         assertThat(request.getStatus()).isEqualTo(RequestStatus.COMPLETED);
         assertThat(post.getStatus()).isEqualTo(PostStatus.CLOSED);
-        verify(postRepository).save(post);
-        verify(shareRequestRepository).save(request);
-        verify(eventPublisher).publishEvent(any(RequestCompletedEvent.class));
     }
 
     @Test

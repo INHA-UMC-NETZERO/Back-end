@@ -60,6 +60,8 @@ class CategoryResponseDtoTest {
                 "https://example.com/snack.jpg",
                 3,
                 5,
+                250L,
+                125L,
                 PostStatus.ACTIVE,
                 false,
                 LocalDateTime.parse("2026-06-27T01:00:00"),
@@ -74,6 +76,8 @@ class CategoryResponseDtoTest {
                 "building 5 lobby",
                 1,
                 "weekday evening",
+                null,
+                null,
                 RequestStatus.APPLIED,
                 LocalDateTime.parse("2026-06-27T01:00:00")
         );

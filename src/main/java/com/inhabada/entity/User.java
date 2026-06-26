@@ -28,6 +28,9 @@ public class User {
     @Column(nullable = false, length = 30)
     private String nickname;
 
+    @Column(name = "total_carbon_saving_gram", nullable = false)
+    private Long totalCarbonSavingGram = 0L;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -58,6 +61,17 @@ public class User {
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public Long getTotalCarbonSavingGram() {
+        return totalCarbonSavingGram;
+    }
+
+    public void addCarbonSavingGram(long gram) {
+        if (gram < 0) {
+            throw new IllegalArgumentException("탄소 저감량은 음수로 증가시킬 수 없습니다");
+        }
+        this.totalCarbonSavingGram += gram;
     }
 
     public LocalDateTime getCreatedAt() {

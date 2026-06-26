@@ -16,6 +16,10 @@ public record MyRequestResponse(
         String postLocation,
         Integer quantity,
         String requestedTime,
+        @Schema(description = "완료된 요청에서 신청자에게 적립된 탄소 저감량. 완료 전에는 null이며 단위는 gram입니다.", example = "110")
+        Long carbonSavingGram,
+        @Schema(description = "전달 완료 처리 시각. 완료 전에는 null입니다.", example = "2026-06-27T15:30:00")
+        LocalDateTime completedAt,
         @Schema(description = "신청 상태 한글 label", example = "신청중", allowableValues = {"신청중", "예약중", "완료", "거절됨"})
         RequestStatus status,
         LocalDateTime createdAt

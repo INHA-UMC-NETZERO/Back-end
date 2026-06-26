@@ -27,7 +27,7 @@ public class RequestController {
     }
 
     @PostMapping("/api/posts/{postId}/requests")
-    @Operation(summary = "나눔 신청", description = "인증된 사용자가 특정 게시글에 나눔을 신청합니다. 생성된 요청은 신청중 상태로 시작합니다. 응답의 status는 프론트 표시용 한글 label로 반환됩니다.")
+    @Operation(summary = "나눔 신청", description = "인증된 사용자가 특정 게시글에 나눔을 신청합니다. 신청 수량은 게시글의 남은 수량을 초과할 수 없습니다. 생성된 요청은 신청중 상태로 시작합니다.")
     public ResponseEntity<RequestResponse> createRequest(@CurrentUser Long userId,
                                                         @Parameter(description = "신청할 게시글 ID")
                                                         @PathVariable Long postId,
@@ -37,7 +37,7 @@ public class RequestController {
     }
 
     @PatchMapping("/api/requests/{id}/approve")
-    @Operation(summary = "신청 승인", description = "게시글 작성자가 신청중 요청을 승인합니다. 요청은 예약중 상태가 됩니다. 승인 후 남은 수량이 있으면 게시글은 나눔중 상태를 유지하고, 남은 수량이 0이면 예약중 상태가 됩니다.")
+    @Operation(summary = "신청 승인", description = "게시글 작성자가 신청중 요청을 승인합니다. 요청은 예약중 상태가 되고 승인 수량만큼 게시글 남은 수량이 감소합니다.")
     public ResponseEntity<Void> approveRequest(@CurrentUser Long userId,
                                                @Parameter(description = "승인할 신청 ID")
                                                @PathVariable Long id) {
@@ -46,7 +46,7 @@ public class RequestController {
     }
 
     @PatchMapping("/api/requests/{id}/reject")
-    @Operation(summary = "신청 거절", description = "게시글 작성자가 신청중 요청을 거절됨 상태로 변경합니다. status는 프론트 표시용 한글 label로 반환됩니다.")
+    @Operation(summary = "신청 거절", description = "게시글 작성자가 신청중 요청을 거절됨 상태로 변경합니다.")
     public ResponseEntity<Void> rejectRequest(@CurrentUser Long userId,
                                               @Parameter(description = "거절할 신청 ID")
                                               @PathVariable Long id) {
@@ -55,7 +55,7 @@ public class RequestController {
     }
 
     @PatchMapping("/api/requests/{id}/complete")
-    @Operation(summary = "전달 완료", description = "예약중 요청을 완료 상태로 변경하고 게시글을 마감 상태로 처리합니다. 프론트에는 신청중, 예약중, 완료, 거절됨 / 나눔중, 예약중, 마감 같은 한글 label이 반환됩니다.")
+    @Operation(summary = "전달 완료", description = "예약중 요청을 완료 상태로 변경하고 탄소 저감량을 기부자와 수령자에게 적립합니다. 게시글은 남은 수량이 0이면 마감 상태가 됩니다.")
     public ResponseEntity<Void> completeRequest(@CurrentUser Long userId,
                                                 @Parameter(description = "완료 처리할 신청 ID")
                                                 @PathVariable Long id) {

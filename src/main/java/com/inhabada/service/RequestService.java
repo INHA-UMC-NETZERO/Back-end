@@ -6,6 +6,7 @@ import com.inhabada.entity.Post;
 import com.inhabada.entity.PostStatus;
 import com.inhabada.entity.RequestStatus;
 import com.inhabada.entity.ShareRequest;
+import com.inhabada.entity.User;
 import com.inhabada.event.RequestApprovedEvent;
 import com.inhabada.event.RequestCompletedEvent;
 import com.inhabada.event.RequestCreatedEvent;
@@ -15,6 +16,7 @@ import com.inhabada.exception.ForbiddenException;
 import com.inhabada.exception.NotFoundException;
 import com.inhabada.repository.PostRepository;
 import com.inhabada.repository.ShareRequestRepository;
+import com.inhabada.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
@@ -22,18 +24,26 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 public class RequestService {
 
     private final PostRepository postRepository;
     private final ShareRequestRepository shareRequestRepository;
+    private final UserRepository userRepository;
+    private final CarbonSavingService carbonSavingService;
     private final ApplicationEventPublisher eventPublisher;
 
     public RequestService(PostRepository postRepository,
                           ShareRequestRepository shareRequestRepository,
+                          UserRepository userRepository,
+                          CarbonSavingService carbonSavingService,
                           ApplicationEventPublisher eventPublisher) {
         this.postRepository = postRepository;
         this.shareRequestRepository = shareRequestRepository;
+        this.userRepository = userRepository;
+        this.carbonSavingService = carbonSavingService;
         this.eventPublisher = eventPublisher;
     }
 
@@ -143,11 +153,32 @@ public class RequestService {
             throw new ConflictException("승인된 요청만 완료 처리할 수 있습니다");
         }
 
-        request.setStatus(RequestStatus.COMPLETED);
-        post.setStatus(PostStatus.CLOSED);
+        CarbonSavingService.CarbonSavingSnapshot carbonSnapshot =
+                carbonSavingService.calculate(post, request);
+
+        request.complete(
+                carbonSnapshot.totalGram(),
+                carbonSnapshot.giverGram(),
+                carbonSnapshot.receiverGram(),
+                LocalDateTime.now()
+        );
+
+        User giver = userRepository.findById(post.getGiverId())
+                .orElseThrow(() -> new NotFoundException("나눔자를 찾을 수 없습니다"));
+        User receiver = userRepository.findById(request.getReceiverId())
+                .orElseThrow(() -> new NotFoundException("요청자를 찾을 수 없습니다"));
+
+        giver.addCarbonSavingGram(carbonSnapshot.giverGram());
+        receiver.addCarbonSavingGram(carbonSnapshot.receiverGram());
+
+        if (post.getRemainingQuantity() == 0) {
+            post.setStatus(PostStatus.CLOSED);
+        }
 
         postRepository.save(post);
         shareRequestRepository.save(request);
+        userRepository.save(giver);
+        userRepository.save(receiver);
 
         eventPublisher.publishEvent(new RequestCompletedEvent(request, request.getReceiverId()));
     }
