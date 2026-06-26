@@ -1,0 +1,40 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+aws:
+  region: ap-northeast-2
+  s3:
+    bucket-name: test-inha-bada-images
+    presigned-url-expiration-minutes: 10
+    max-file-size-mb: 10
+    public-base-url: https://test-inha-bada-images.s3.ap-northeast-2.amazonaws.com
+  bedrock:
+    model-id: anthropic.claude-3-haiku-20240307-v1:0
+    max-tokens: 1024
+
+app:
+  session:
+    ttl-days: 7
+  feed:
+    default-page-size: 20
+  matching:
+    similarity-threshold: 0.7
+    max-results: 5
+  webview:
+    base-url: https://test.inha-bada.app
