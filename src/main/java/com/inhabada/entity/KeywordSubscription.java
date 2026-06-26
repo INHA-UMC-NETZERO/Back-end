@@ -31,7 +31,7 @@ public class KeywordSubscription {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 255)
     private String keyword;
 
     @CreatedDate
